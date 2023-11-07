@@ -1,38 +1,38 @@
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-    hooks:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
-    - id: check-yaml
-    - id: end-of-file-fixer
-    - id: trailing-whitespace
-    - id: check-executables-have-shebangs
-    - id: check-shebang-scripts-are-executable
-    - id: check-merge-conflict
-    - id: check-xml
-    - id: check-added-large-files
-    - id: check-case-conflict
-    - id: check-symlinks
-    - id: debug-statements
-    - id: mixed-line-ending
-- repo: https://github.com/psf/black
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-merge-conflict
+      - id: check-xml
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: debug-statements
+      - id: mixed-line-ending
+  - repo: https://github.com/psf/black
     rev: 23.10.1
     hooks:
       - id: black
-- repo: https://github.com/tier4/pre-commit-hooks-ros
+  - repo: https://github.com/tier4/pre-commit-hooks-ros
     rev: v0.7.0
     hooks:
-    - id: flake8-ros
-    - id: prettier-xacro
-    - id: prettier-launch-xml
-    - id: prettier-package-xml
-    - id: ros-include-guard
-    - id: sort-package-xml
-- repo: local
+      - id: flake8-ros
+      - id: prettier-xacro
+      - id: prettier-launch-xml
+      - id: prettier-package-xml
+      - id: ros-include-guard
+      - id: sort-package-xml
+  - repo: local
     hooks:
-    - id: catkin_lint
-    name: catkin_lint
-    description: Check package.xml and cmake files
-    entry: catkin_lint .
-    language: system
-    always_run: true
-    pass_filenames: false
+      - id: catkin_lint
+        name: catkin_lint
+        description: Check package.xml and cmake files
+        entry: catkin_lint .
+        language: system
+        always_run: true
+        pass_filenames: false

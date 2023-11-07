@@ -12,18 +12,65 @@ PRECOMMIT_CONFIG_URL=https://raw.githubusercontent.com/rigbetellabs/workflow/mas
 
 YES_FLAG=false
 
-while getopts yn: flag
-do
-    case "${flag}" in
-        y) YES_FLAG=true;;
-        n) REPOSITORY_NAME=${OPTARG};;
-    esac
-done
+# Function to display script usage
+usage() {
+ echo "Usage: $0 --name annex [OPTIONS]"
+ echo "Options:"
+ echo " -h, --help      Display this help message"
+ echo " -y, --yes       Enable -y flag to all commands"
+ echo " -n, --name      STRING Repository name to create"
+}
 
-if [ -z "$REPOSITORY_NAME" ]; then 
-	echo -e "${RED}REPOSITORY name not passed${ENDCOLOR}"
+has_argument() {
+    [[ ("$1" == *=* && -n ${1#*=}) || ( ! -z "$2" && "$2" != -*)  ]];
+}
+
+extract_argument() {
+  echo "${2:-${1#*=}}"
+}
+
+# Function to handle options and arguments
+handle_options() {
+  if [ $# -eq 0 ]
+   then
+	echo -e "${RED}ERROR: No arg passed, name required${ENDCOLOR}"
+	usage
 	exit 1
-fi
+  fi
+  while [ $# -gt 0 ]; do
+    case $1 in
+      -h | --help)
+        usage
+        exit 0
+        ;;
+      -Y | --yes)
+        YES_FLAG=true
+        ;;
+      -n | --name*)
+        if ! has_argument $@; then
+          echo -e "${RED}ERROR: Repository name not passed${ENDCOLOR}" >&2
+          usage
+          exit 1
+        fi
+
+        REPOSITORY_NAME=$(extract_argument $@)
+
+        shift
+        ;;
+      *)
+        echo "Invalid option: $1" >&2
+        usage
+        exit 1
+        ;;
+    esac
+    shift
+  done
+}
+
+# Main script execution
+handle_options "$@"
+
+
 
 CURR_DIR=$(pwd)
 WORKING_DIR=${CURR_DIR}/$REPOSITORY_NAME
@@ -132,24 +179,3 @@ else
 	echo -e "${BOLD}${BLUE}Installing... pre-commit git hooks${ENDCOLOR}"
 	pre-commit install
 fi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# TO REMOVE LATERS
-cd ../
-echo -e "${RED}removing...${ENDCOLOR}"
-rm -rf $REPOSITORY_NAME/
-sleep 10
-clear
