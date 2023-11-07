@@ -43,7 +43,7 @@ handle_options() {
         usage
         exit 0
         ;;
-      -Y | --yes)
+      -y | --yes)
         YES_FLAG=true
         ;;
       -n | --name*)
@@ -96,7 +96,7 @@ echo -e "${GREEN}Created directories${ENDCOLOR}\n"
 
 cd $WORKING_DIR
 
-# add .gitignore 
+# add .gitignore
 if [ $YES_FLAG != true ]; then
 	while true; do
 		echo -e "Do you want to add ${BOLD}${BLUE}.gitignore${ENDCOLOR}? [Y/n]"
@@ -130,7 +130,7 @@ else
 	git init
 fi
 
-# Check for pre-commit 
+# Check for pre-commit
 if ! command -v pre-commit --version &> /dev/null ; then
 	echo -e "${YELLOW}Warn: pre-commit not found!${ENDCOLOR}"
 	while true; do
@@ -179,3 +179,22 @@ else
 	echo -e "${BOLD}${BLUE}Installing... pre-commit git hooks${ENDCOLOR}"
 	pre-commit install
 fi
+
+# run pre-commit for initialization
+if [ $YES_FLAG != true ]; then
+	while true; do
+		echo -e "Do you want run ${BOLD}${BLUE}pre-commit${ENDCOLOR}? [Y/n]"
+	    read -p '' yn
+	    case $yn in
+	        [Yy]* ) pre-commit run; break;;
+			"" )    pre-commit run; break;;
+	        [Nn]* ) echo -e "${GREEN}skipped${ENDCOLOR}"; break;;
+	        * )     echo "Please answer yes or no.";;
+	    esac
+	done
+else
+	echo -e "${BOLD}${BLUE}Running... pre-commit${ENDCOLOR}"
+	pre-commit run
+fi
+
+echo -e "${GREEN}${BOLD}\nDONE...!\n${ENDCOLOR}"
