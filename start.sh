@@ -14,63 +14,92 @@ YES_FLAG=false
 
 # Function to display script usage
 usage() {
- echo "Usage: $0 --name annex [OPTIONS]"
- echo "Options:"
- echo " -h, --help      Display this help message"
- echo " -y, --yes       Enable -y flag to all commands"
- echo " -n, --name      STRING Repository name to create"
+	echo "Usage: $0 --name annex [OPTIONS]"
+	echo "Options:"
+	echo " -h, --help      Display this help message"
+	echo " -y, --yes       Enable -y flag to all commands"
+	echo " -n, --name      STRING Repository name to create"
 }
 
 has_argument() {
-    [[ ("$1" == *=* && -n ${1#*=}) || ( ! -z "$2" && "$2" != -*)  ]];
+	[[ ("$1" == *=* && -n ${1#*=}) || (! -z "$2" && "$2" != -*) ]]
 }
 
 extract_argument() {
-  echo "${2:-${1#*=}}"
+	echo "${2:-${1#*=}}"
 }
 
 # Function to handle options and arguments
 handle_options() {
-  if [ $# -eq 0 ]
-   then
-	echo -e "${RED}ERROR: No arg passed, name required${ENDCOLOR}"
-	usage
-	exit 1
-  fi
-  while [ $# -gt 0 ]; do
-    case $1 in
-      -h | --help)
-        usage
-        exit 0
-        ;;
-      -y | --yes)
-        YES_FLAG=true
-        ;;
-      -n | --name*)
-        if ! has_argument $@; then
-          echo -e "${RED}ERROR: Repository name not passed${ENDCOLOR}" >&2
-          usage
-          exit 1
-        fi
+	if [ $# -eq 0 ]; then
+		echo -e "${RED}ERROR: No arg passed, name required${ENDCOLOR}"
+		usage
+		exit 1
+	fi
+	while [ $# -gt 0 ]; do
+		case $1 in
+		-h | --help)
+			usage
+			exit 0
+			;;
+		-y | --yes)
+			YES_FLAG=true
+			;;
+		-n | --name*)
+			if ! has_argument $@; then
+				echo -e "${RED}ERROR: Repository name not passed${ENDCOLOR}" >&2
+				usage
+				exit 1
+			fi
 
-        REPOSITORY_NAME=$(extract_argument $@)
+			REPOSITORY_NAME=$(extract_argument $@)
 
-        shift
-        ;;
-      *)
-        echo "Invalid option: $1" >&2
-        usage
-        exit 1
-        ;;
-    esac
-    shift
-  done
+			shift
+			;;
+		*)
+			echo "Invalid option: $1" >&2
+			usage
+			exit 1
+			;;
+		esac
+		shift
+	done
+}
+
+install_pip() {
+	while true; do
+		echo -e "Do you want to install ${BOLD}${BLUE}python3-pip${ENDCOLOR}? [Y/n]"
+		read -p '' yn
+		case $yn in
+		[Yy]*)
+			sudo apt install python3-pip
+			break
+			;;
+		"")
+			sudo apt install python3-pip
+			break
+			;;
+		[Nn]*)
+			echo -e "${GREEN}skipped${ENDCOLOR}"
+			break
+			;;
+		*) echo "Please answer yes or no." ;;
+		esac
+	done
+}
+
+check_install_pre_commit() {
+	if ! command -v pip --version &>/dev/null; then
+		echo -e "${RED}ERROR: pip not found!${ENDCOLOR}"
+		install_pip
+		pip install pre-commit
+	else
+		pip install pre-commit
+	fi
 }
 
 # Main script execution
 handle_options "$@"
-
-
 
 CURR_DIR=$(pwd)
 WORKING_DIR=${CURR_DIR}/$REPOSITORY_NAME
@@ -100,13 +129,22 @@ cd $WORKING_DIR
 if [ $YES_FLAG != true ]; then
 	while true; do
 		echo -e "Do you want to add ${BOLD}${BLUE}.gitignore${ENDCOLOR}? [Y/n]"
-	    read -p '' yn
-	    case $yn in
-	        [Yy]* ) wget $GITIGNORE_URL; break;;
-			"" )    wget $GITIGNORE_URL; break;;
-	        [Nn]* ) echo -e "${GREEN}skipped${ENDCOLOR}"; break;;
-	        * )     echo "Please answer yes or no.";;
-	    esac
+		read -p '' yn
+		case $yn in
+		[Yy]*)
+			wget $GITIGNORE_URL
+			break
+			;;
+		"")
+			wget $GITIGNORE_URL
+			break
+			;;
+		[Nn]*)
+			echo -e "${GREEN}skipped${ENDCOLOR}"
+			break
+			;;
+		*) echo "Please answer yes or no." ;;
+		esac
 	done
 else
 	echo -e "${BOLD}${BLUE}Adding... .gitignore${ENDCOLOR}"
@@ -116,14 +154,23 @@ fi
 # git init
 if [ $YES_FLAG != true ]; then
 	while true; do
-	    echo -e "Do you want to perform ${BOLD}${BLUE}git init${ENDCOLOR}? [Y/n]"
-	    read -p '' yn
-	    case $yn in
-	        [Yy]* ) git init; break;;
-			"" )    git init; break;;
-	        [Nn]* ) echo -e "${GREEN}skipped${ENDCOLOR}"; break;;
-	        * )     echo "Please answer yes or no.";;
-	    esac
+		echo -e "Do you want to perform ${BOLD}${BLUE}git init${ENDCOLOR}? [Y/n]"
+		read -p '' yn
+		case $yn in
+		[Yy]*)
+			git init
+			break
+			;;
+		"")
+			git init
+			break
+			;;
+		[Nn]*)
+			echo -e "${GREEN}skipped${ENDCOLOR}"
+			break
+			;;
+		*) echo "Please answer yes or no." ;;
+		esac
 	done
 else
 	echo -e "${BOLD}${BLUE}Performing \"git init\"${ENDCOLOR}"
@@ -131,32 +178,49 @@ else
 fi
 
 # Check for pre-commit
-if ! command -v pre-commit --version &> /dev/null ; then
+if ! command -v pre-commit --version &>/dev/null; then
 	echo -e "${YELLOW}Warn: pre-commit not found!${ENDCOLOR}"
 	while true; do
 		echo -e "Do you want install ${BOLD}${BLUE}pre-commit${ENDCOLOR}? [Y/n]"
-	    read -p '' yn
-	    case $yn in
-	        [Yy]* ) sudo apt install pre-commit; break;;
-			"" )    sudo apt install pre-commit; break;;
-	        [Nn]* ) echo -e "${GREEN}skipped${ENDCOLOR}"; break;;
-	        * )     echo "Please answer yes or no.";;
-	    esac
+		read -p '' yn
+		case $yn in
+		[Yy]*)
+			check_install_pre_commit
+			break
+			;;
+		"")
+			check_install_pre_commit
+			break
+			;;
+		[Nn]*)
+			echo -e "${GREEN}skipped${ENDCOLOR}"
+			break
+			;;
+		*) echo "Please answer yes or no." ;;
+		esac
 	done
 fi
-
 
 # add .pre-commit-config.yaml
 if [ $YES_FLAG != true ]; then
 	while true; do
 		echo -e "Do you want to add ${BOLD}${BLUE}.pre-commit-config.yaml${ENDCOLOR}? [Y/n]"
-	    read -p '' yn
-	    case $yn in
-	        [Yy]* ) wget $PRECOMMIT_CONFIG_URL; break;;
-			"" )    wget $PRECOMMIT_CONFIG_URL; break;;
-	        [Nn]* ) echo -e "${GREEN}skipped${ENDCOLOR}"; break;;
-	        * )     echo "Please answer yes or no.";;
-	    esac
+		read -p '' yn
+		case $yn in
+		[Yy]*)
+			wget $PRECOMMIT_CONFIG_URL
+			break
+			;;
+		"")
+			wget $PRECOMMIT_CONFIG_URL
+			break
+			;;
+		[Nn]*)
+			echo -e "${GREEN}skipped${ENDCOLOR}"
+			break
+			;;
+		*) echo "Please answer yes or no." ;;
+		esac
 	done
 else
 	echo -e "${BOLD}${BLUE}Adding... .pre-commit-config.yaml${ENDCOLOR}"
@@ -167,13 +231,22 @@ fi
 if [ $YES_FLAG != true ]; then
 	while true; do
 		echo -e "Do you want install ${BOLD}${BLUE}pre-commit git hooks${ENDCOLOR}? [Y/n]"
-	    read -p '' yn
-	    case $yn in
-	        [Yy]* ) pre-commit install; break;;
-			"" )    pre-commit install; break;;
-	        [Nn]* ) echo -e "${GREEN}skipped${ENDCOLOR}"; break;;
-	        * )     echo "Please answer yes or no.";;
-	    esac
+		read -p '' yn
+		case $yn in
+		[Yy]*)
+			pre-commit install
+			break
+			;;
+		"")
+			pre-commit install
+			break
+			;;
+		[Nn]*)
+			echo -e "${GREEN}skipped${ENDCOLOR}"
+			break
+			;;
+		*) echo "Please answer yes or no." ;;
+		esac
 	done
 else
 	echo -e "${BOLD}${BLUE}Installing... pre-commit git hooks${ENDCOLOR}"
@@ -184,13 +257,22 @@ fi
 if [ $YES_FLAG != true ]; then
 	while true; do
 		echo -e "Do you want run ${BOLD}${BLUE}pre-commit${ENDCOLOR}? [Y/n]"
-	    read -p '' yn
-	    case $yn in
-	        [Yy]* ) pre-commit run; break;;
-			"" )    pre-commit run; break;;
-	        [Nn]* ) echo -e "${GREEN}skipped${ENDCOLOR}"; break;;
-	        * )     echo "Please answer yes or no.";;
-	    esac
+		read -p '' yn
+		case $yn in
+		[Yy]*)
+			pre-commit run
+			break
+			;;
+		"")
+			pre-commit run
+			break
+			;;
+		[Nn]*)
+			echo -e "${GREEN}skipped${ENDCOLOR}"
+			break
+			;;
+		*) echo "Please answer yes or no." ;;
+		esac
 	done
 else
 	echo -e "${BOLD}${BLUE}Running... pre-commit${ENDCOLOR}"
