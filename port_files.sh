@@ -109,8 +109,8 @@ create_dir() {
 	mkdir -p $WORKING_DIR/docs
 	echo -e "${GREEN}\t- docs${ENDCOLOR}"
 
-	mkdir -p $WORKING_DIR/dockerfiles
-	echo -e "${GREEN}\t- dockerfiles${ENDCOLOR}"
+	mkdir -p $WORKING_DIR/Docker
+	echo -e "${GREEN}\t- Docker${ENDCOLOR}"
 
 	echo -e "${GREEN}Created directories${ENDCOLOR}\n"
 }
